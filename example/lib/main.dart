@@ -72,7 +72,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   initScanBeacon() async {
-    await flutterBeacon.initializeScanning;
+    await flutterBeacon.initializeAndCheckScanning;
     await checkAllRequirements();
     if (!authorizationStatusOk ||
         !locationServiceEnabled ||
@@ -82,12 +82,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           'bluetoothEnabled=$bluetoothEnabled');
       return;
     }
-    final regions = <Region>[
-      Region(
-        identifier: 'Cubeacon',
-        proximityUUID: 'CB10023F-A318-3394-4199-A8730C7C1AEC',
-      ),
-    ];
+    final regions = <Region>[];
+
+    if (Platform.isIOS) {
+      // iOS platform, at least set identifier and proximityUUID for region scanning
+      regions.add(Region(
+          identifier: 'Apple Airlocate',
+          proximityUUID: 'E2C56DB5-DFFB-48D2-B060-D0F5A71096E0'));
+    } else {
+      // android platform, it can ranging out of beacon that filter all of Proximity UUID
+      regions.add(Region(identifier: 'com.beacon'));
+    }
 
     if (_streamRanging != null) {
       if (_streamRanging.isPaused) {
